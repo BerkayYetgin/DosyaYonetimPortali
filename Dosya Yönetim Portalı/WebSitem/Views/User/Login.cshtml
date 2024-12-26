@@ -1,0 +1,75 @@
+@{
+    Layout = "_AuthLayout";
+    ViewData["Title"] = "Giriş Yap";
+}
+
+@model LoginViewModel
+
+<div class="auth-container">
+    <div class="auth-box">
+        <div class="auth-header">
+            <div class="auth-logo">
+                <i class="fas fa-cloud fa-3x" style="color: #667eea;"></i>
+            </div>
+            <h2 class="auth-title">Hoş Geldiniz</h2>
+            <p class="auth-subtitle">Hesabınıza giriş yapın</p>
+        </div>
+
+        <form asp-controller="User" asp-action="Login" method="post">
+            <div asp-validation-summary="ModelOnly" class="validation-message"></div>
+            
+            <div class="form-group">
+                <label asp-for="Email">Email Adresi</label>
+                <input asp-for="Email" class="form-control" placeholder="ornek@email.com" />
+                <span asp-validation-for="Email" class="validation-message"></span>
+            </div>
+            
+            <div class="form-group">
+                <label asp-for="Password">Şifre</label>
+                <div class="password-input-group">
+                    <input asp-for="Password" class="form-control" placeholder="••••••••" type="password" />
+                    <span class="password-toggle" onclick="togglePassword(this)">
+                        <i class="fas fa-eye"></i>
+                    </span>
+                </div>
+                <span asp-validation-for="Password" class="validation-message"></span>
+            </div>
+            
+            <div class="form-check">
+                <input asp-for="RememberMe" class="form-check-input" type="checkbox">
+                <label class="form-check-label" asp-for="RememberMe">Beni Hatırla</label>
+            </div>
+            
+            <button type="submit" class="btn-auth">
+                <span>Giriş Yap</span>
+                <i class="fas fa-arrow-right"></i>
+            </button>
+        </form>
+
+        <div class="auth-links">
+            <a href="@Url.Action("Register","User")" class="auth-link">
+                Hesabınız yok mu? <span>Kayıt olun</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function togglePassword(element) {
+            const input = element.parentElement.querySelector('input');
+            const icon = element.querySelector('i');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+    </script>
+}
+

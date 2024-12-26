@@ -1,0 +1,424 @@
+﻿@model IEnumerable<Folder>
+
+<div class="storage-container" style="margin-top: 80px;
+    
+    background-color: revert;">
+    <div class="storage-header">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Dosyalarım</h2>
+            <button class="btn btn-primary" onclick="showCreateFolderModal()">
+                <i class="fas fa-folder-plus"></i> Yeni Klasör
+            </button>
+        </div>
+        
+        <div class="storage-usage-card">
+            <div class="storage-info">
+                <h5>Depolama Alanı</h5>
+                <p class="storage-text">
+                    <span id="usedStorage">0</span> GB /
+                    <span id="totalStorage">10</span> GB
+                </p>
+            </div>
+            <div class="progress">
+                <div id="storageProgress" 
+                     class="progress-bar progress-bar-striped progress-bar-animated" 
+                     role="progressbar" 
+                     style="width: 0%">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="folders-grid">
+        @foreach (var folder in Model)
+        {
+            <div class="folder-card" id="folder-@folder.Id">
+                <div class="folder-content" onclick="openFolderDetails(@folder.Id, '@folder.Name')">
+                    <div class="folder-icon">
+                        <i class="fas fa-folder"></i>
+                    </div>
+                    <div class="folder-info">
+                        <h4>@folder.Name</h4>
+                        <small>@folder.CreatedAt.ToString("dd.MM.yyyy HH:mm")</small>
+                    </div>
+                </div>
+                <div class="folder-actions">
+                    <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); deleteFolder(@folder.Id, '@folder.Name')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Klasör Detay Modal -->
+<div class="modal fade" id="folderDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-folder-open"></i> 
+                    <span id="folderName"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <button class="btn btn-success" onclick="showUploadFileModal()">
+                        <i class="fas fa-file-upload"></i> Dosya Ekle
+                    </button>
+                </div>
+                <div class="files-list">
+                    <!-- Dosyalar buraya dinamik olarak yüklenecek -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Dosya Yükleme Modal -->
+<div class="modal fade" id="uploadFileModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Dosya Yükle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="file" id="fileInput" class="form-control">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-primary" onclick="uploadFile()">Yükle</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Klasör Oluşturma Modal -->
+<div class="modal fade" id="createFolderModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Yeni Klasör</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="newFolderName">Klasör Adı</label>
+                    <input type="text" class="form-control" id="newFolderName" placeholder="Klasör adını giriniz">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-primary" onclick="createFolder()">Oluştur</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Sayfa yüklendiğinde storage bilgilerini güncelle
+        $(document).ready(function() {
+
+            const initialUsedStorage = @ViewBag.UsedStorage;
+            const initialStorageLimit = @ViewBag.StorageLimit;
+            updateStorageUI(initialUsedStorage, initialStorageLimit);
+        });
+                let currentFolderId = null;
+
+        // SignalR balants
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/storageHub")
+            .withAutomaticReconnect()
+            .build();
+
+        connection.start().catch(err => console.error(err));
+
+        // Storage gncelleme fonksiyonu
+        connection.on("ReceiveStorageUpdate", (usedStorage, storageLimit) => {
+            updateStorageUI(usedStorage, storageLimit);
+        });
+
+        function updateStorageUI(usedStorage, storageLimit) {
+            const usedGB = (usedStorage / (1024 * 1024 * 1024)).toFixed(2);
+            const totalGB = (storageLimit / (1024 * 1024 * 1024)).toFixed(2);
+            const percentage = (usedStorage / storageLimit) * 100;
+
+            $('#usedStorage').text(usedGB);
+            $('#totalStorage').text(totalGB);
+
+            const progressBar = $('#storageProgress');
+            progressBar.css('width', `${percentage}%`);
+            progressBar.text(`${percentage.toFixed(1)}%`);
+
+            // Renk deiimi
+            if (percentage > 90) {
+                progressBar.removeClass('warning').addClass('danger');
+            } else if (percentage > 70) {
+                progressBar.removeClass('danger').addClass('warning');
+            } else {
+                progressBar.removeClass('warning danger');
+            }
+        }
+
+        function closeModal(modalId) {
+            const modal = bootstrap.Modal.getInstance(document.getElementById(modalId));
+            if (modal) {
+                modal.hide();
+            }
+        }
+
+        function openFolderDetails(folderId, folderName) {
+            currentFolderId = folderId;
+            $('#folderName').text(folderName);
+            loadFiles(folderId);
+            $('#folderDetailsModal').modal('show');
+        }
+
+        function showUploadFileModal() {
+            if (!currentFolderId) {
+                toastr.error('Lütfen önce bir klasör seçin');
+                return;
+            }
+            closeModal('folderDetailsModal');
+            const modal = new bootstrap.Modal(document.getElementById('uploadFileModal'));
+            modal.show();
+        }
+
+        function loadFiles(folderId) {
+            $.ajax({
+                url: '/Home/GetFiles',
+                type: 'GET',
+                data: { folderId: folderId },
+                success: function(response) {
+                    if (response.success) {
+                        const filesList = response.files.map(file => `
+                            <div class="file-item">
+                                <i class="fas fa-file"></i>
+                                <div class="file-info">
+                                    <h5 class="file-name">${file.fileName}</h5>
+                                    <div class="file-details">
+                                        <span>${formatFileSize(file.fileSize)}</span> •
+                                        <span>${new Date(file.uploadedAt).toLocaleString()}</span>
+                                    </div>
+                                </div>
+                                <div class="file-actions">
+                                    <button class="btn btn-sm btn-primary" onclick="downloadFile(${file.id})" title="İndir">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteFile(${file.id})" title="Sil">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('');
+
+                        $('.files-list').html(filesList.length ? filesList : '<p class="text-center text-muted">Bu klasörde henüz dosya yok.</p>');
+                    } else {
+                        toastr.error('Dosyalar yüklenirken bir hata oluştu');
+                    }
+                },
+                error: function() {
+                    toastr.error('Dosyalar yüklenirken bir hata oluştu');
+                }
+            });
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function uploadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                toastr.error('Lütfen bir dosya seçin');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('folderId', currentFolderId);
+
+            $.ajax({
+                url: '/Home/UploadFile',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.success) {
+                        closeModal('uploadFileModal');
+                        $('#fileInput').val('');
+                        toastr.success(response.message);
+
+                        // Storage bilgisini güncelle
+                        updateStorageUI(response.usedStorage, response.storageLimit);
+
+                        // Dosya listesini backend'den yeniden yükle
+                        loadFiles(currentFolderId);
+
+                        const folderModal = new bootstrap.Modal(document.getElementById('folderDetailsModal'));
+                        folderModal.show();
+                    } else {
+                        toastr.error(response.message);
+                    }
+                },
+                error: function() {
+                    toastr.error('Dosya yükleme sırasında bir hata oluştu');
+                }
+            });
+        }
+
+        function downloadFile(fileId) {
+            // Yeni bir pencerede dosyayı indir
+            window.open(`/Home/DownloadFile/${fileId}`, '_blank');
+        }
+
+        function deleteFile(fileId) {
+            if (!confirm('Bu dosyayı silmek istediğinizden emin misiniz?')) {
+                return;
+            }
+
+            $.ajax({
+                url: '/Home/DeleteFile',
+                type: 'POST',
+                data: { id: fileId },
+                success: function (response) {
+                    if (response.success) {
+                        toastr.success(response.message);
+                        loadFiles(currentFolderId);
+
+                        // Storage bilgisini güncelle
+                        updateStorageUI(response.usedStorage, response.storageLimit);
+                    } else {
+                        toastr.error(response.message);
+                    }
+                },
+                error: function () {
+                    toastr.error('Dosya silinirken bir hata oluştu!');
+                }
+            });
+        }
+
+        function showCreateFolderModal() {
+            const modal = new bootstrap.Modal(document.getElementById('createFolderModal'));
+            modal.show();
+        }
+
+        function createFolder() {
+            const folderName = $('#newFolderName').val().trim();
+
+            if (!folderName) {
+                toastr.error('Klasör adı boş olamaz!');
+                return;
+            }
+
+            $.ajax({
+                url: '/Home/CreateFolder',
+                type: 'POST',
+                data: { folderName: folderName },
+                success: function(response) {
+                    if (response.success) {
+                        const foldersGrid = $('.folders-grid');
+                        const newFolder = `
+                            <div class="folder-card" id="folder-${response.folder.id}">
+                                <div class="folder-content" onclick="openFolderDetails(${response.folder.id}, '${response.folder.name}')">
+                                    <div class="folder-icon">
+                                        <i class="fas fa-folder"></i>
+                                    </div>
+                                    <div class="folder-info">
+                                        <h4>${response.folder.name}</h4>
+                                        <small>${response.folder.createdAt}</small>
+                                    </div>
+                                </div>
+                                <div class="folder-actions">
+                                    <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); deleteFolder(${response.folder.id}, '${response.folder.name}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+
+                        // Eğer "Klasör bulunamadı" mesajı varsa kaldır
+                        if (foldersGrid.find('.no-folders-message').length) {
+                            foldersGrid.empty();
+                        }
+
+                        foldersGrid.append(newFolder);
+
+                        // Input'u temizle ve modalı kapat
+                        $('#newFolderName').val('');
+                        closeModal('createFolderModal');
+
+                        toastr.success(response.message);
+                    } else {
+                        toastr.error(response.message);
+                    }
+                },
+                error: function() {
+                    toastr.error('Klasör oluşturulurken bir hata oluştu!');
+                }
+            });
+        }
+
+        function deleteFolder(folderId, folderName) {
+            Swal.fire({
+                title: 'Klasörü Silmek İstediğinizden Emin misiniz?',
+                html: `
+                    <div class="text-left">
+                        <p><strong>${folderName}</strong> klasörü ve içindeki tüm dosyalar silinecektir.</p>
+                        <p class="text-danger">Bu işlem geri alınamaz!</p>
+                    </div>
+                `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Evet, Sil',
+                cancelButtonText: 'İptal',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '/Home/DeleteFolder',
+                        type: 'POST',
+                        data: { id: folderId },
+                        success: function(response) {
+                            if (response.success) {
+                                // Klasörü animasyonlu bir şekilde kaldır
+                                $(`#folder-${folderId}`).fadeOut(300, function() {
+                                    $(this).remove();
+
+                                    //// Eğer hiç klasör kalmadıysa mesaj göster
+                                    //if ($('.folder-card').length === 0) {
+                                    //    $('.folders-grid').html('<p class="text-center text-muted mt-4">Henüz klasör bulunmuyor.</p>');
+                                    //}
+                                });
+
+                                // Storage bilgisini güncelle
+                                updateStorageUI(response.usedStorage, response.storageLimit);
+
+                                toastr.success(response.message);
+                            } else {
+                                toastr.error(response.message);
+                            }
+                        },
+                        error: function() {
+                            toastr.error('Klasör silinirken bir hata oluştu!');
+                        }
+                    });
+                }
+            });
+        }
+
+    </script>
+}

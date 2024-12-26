@@ -1,0 +1,145 @@
+﻿@{
+    var isAuthenticated = User?.Identity?.IsAuthenticated ?? false;
+    
+    if (!isAuthenticated && 
+        !Context.Request.Path.StartsWithSegments("/User/Login") && 
+        !Context.Request.Path.StartsWithSegments("/User/Register"))
+    {
+        <script>
+            window.location.href = '/User/Login';
+        </script>
+        return;
+    }
+}
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - WebSitem</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/WebSitem.styles.css" asp-append-version="true" />
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf/notyf.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/notyf/notyf.min.js"></script>
+    <link rel="stylesheet" href="~/css/storage.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"  />
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.css" />
+
+    
+
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2/theme-bootstrap-4/bootstrap-4.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="~/css/navbar.css" />
+</head>
+<body>
+    <header>
+        <nav class="modern-navbar">
+            <div class="container">
+                <div class="nav-wrapper">
+                    <div class="nav-brand">
+                        <a asp-controller="Home" asp-action="Index">
+                            <i class="fas fa-cloud"></i>
+                            <span>WebSitem</span>
+                        </a>
+                    </div>
+
+                    <button class="nav-toggle">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+
+                    <div class="nav-menu">
+                        <ul class="nav-links">
+                            @if (User.Identity.IsAuthenticated)
+                            {
+                                if (User.IsInRole("User"))
+                                {
+                                    <li class="nav-item">
+                                        <a class="nav-link" asp-controller="Home" asp-action="Index">
+                                            <i class="fas fa-folder"></i>
+                                            Dosyalarım
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" asp-controller="User" asp-action="Logout">
+                                            <i class="fas fa-sign-out-alt"></i>
+                                            Çıkış Yap
+                                        </a>
+                                    </li>
+                                 
+                                    <h6> @User.Identity.Name</h6>
+                                    
+                                }
+                                if(User.IsInRole("Admin")){
+                                    <script>
+                                        window.location.href = '/Admin/Index';
+                                    </script>
+                                }
+
+                                
+                            }
+                            else
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="User" asp-action="Login">
+                                        <i class="fas fa-sign-in-alt"></i>
+                                        Giriş Yap
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link highlight" asp-controller="User" asp-action="Register">
+                                        <i class="fas fa-user-plus"></i>
+                                        Kayıt Ol
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+   
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <!-- jQuery CDN -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+    <script src="~/js/navbar.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+    @await Component.InvokeAsync("Notyf")
+
+    @section Scripts {
+        <script src="~/js/navbar.js"></script>
+    }
+
+
+ 
+  
+</body>
+</html>

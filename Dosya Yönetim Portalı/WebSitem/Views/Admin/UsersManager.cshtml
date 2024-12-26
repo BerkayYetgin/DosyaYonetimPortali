@@ -1,0 +1,95 @@
+﻿
+
+@model List<UserManagementViewModel>
+@{
+    ViewData["Title"] = "Kullanıcı Yönetimi";
+    Layout = "~/Views/Shared/_adminLayout.cshtml";
+}
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Kullanıcı Listesi</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered" id="usersTable" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>Kullanılan Alan</th>
+                        <th>Limit</th>
+                       
+                        <th>İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Model)
+                    {
+                        <tr data-user-id="@user.Id">
+                            <td>@user.Email</td>
+                            <td>@user.FormattedUsedStorage</td>
+                            <td class="storage-limit">@user.FormattedStorageLimit</td>
+                           
+                            <td>
+                                <button class="btn btn-primary btn-sm" onclick="updateStorageLimit('@user.Id')">
+                                    <i class="fas fa-edit"></i> Limit Güncelle
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#usersTable').DataTable({
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.10.24/i18n/Turkish.json'
+                }
+            });
+        });
+
+        function updateStorageLimit(userId) {
+            Swal.fire({
+                title: 'Depolama Limiti Güncelle',
+                input: 'number',
+                inputLabel: 'Yeni limit (GB)',
+                inputPlaceholder: 'Örn: 5',
+                showCancelButton: true,
+                confirmButtonText: 'Güncelle',
+                cancelButtonText: 'İptal',
+                inputValidator: (value) => {
+                    if (!value || value <= 0) {
+                        return 'Geçerli bir değer giriniz!';
+                    }
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '/Admin/UpdateStorageLimit',
+                        type: 'POST',
+                        data: {
+                            userId: userId,
+                            newLimit: result.value
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                Swal.fire('Başarılı!', response.message, 'success');
+                                $(`tr[data-user-id="${userId}"] .storage-limit`).text(response.formattedLimit);
+                            } else {
+                                Swal.fire('Hata!', response.message, 'error');
+                            }
+                        },
+                        error: function() {
+                            Swal.fire('Hata!', 'Bir hata oluştu!', 'error');
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+}

@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\build\WebSitem.props" />
+</Project>

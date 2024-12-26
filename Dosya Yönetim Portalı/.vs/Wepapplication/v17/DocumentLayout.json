@@ -1,0 +1,37 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\berkay\\Desktop\\Yeni klas\u00F6r (2)\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{2F6561AD-3B42-49CC-89F3-CF166E21E5B8}|WebSitem\\WebSitem.csproj|c:\\users\\berkay\\desktop\\yeni klas\u00F6r (2)\\websitem\\migrations\\20241225205108_mig1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{2F6561AD-3B42-49CC-89F3-CF166E21E5B8}|WebSitem\\WebSitem.csproj|solutionrelative:websitem\\migrations\\20241225205108_mig1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "20241225205108_mig1.cs",
+              "DocumentMoniker": "C:\\Users\\berkay\\Desktop\\Yeni klas\u00F6r (2)\\WebSitem\\Migrations\\20241225205108_mig1.cs",
+              "RelativeDocumentMoniker": "WebSitem\\Migrations\\20241225205108_mig1.cs",
+              "ToolTip": "C:\\Users\\berkay\\Desktop\\Yeni klas\u00F6r (2)\\WebSitem\\Migrations\\20241225205108_mig1.cs",
+              "RelativeToolTip": "WebSitem\\Migrations\\20241225205108_mig1.cs",
+              "ViewState": "AgIAAIgAAAAAAAAAAAAgwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-25T20:51:08.958Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
